@@ -15,6 +15,7 @@ See the LICENSE file for more details.
 #include <math.h>
 #include <util/delay.h>
 
+
 AllSensors_DLHR::AllSensors_DLHR(TwoWire *bus, SensorType type, SensorResolution pressure_resolution, float pressure_max) :
   pressure_unit(PressureUnit::IN_H2O),
   temperature_unit(TemperatureUnit::CELCIUS)
@@ -23,6 +24,7 @@ AllSensors_DLHR::AllSensors_DLHR(TwoWire *bus, SensorType type, SensorResolution
   this->type = type;
   this->pressure_resolution = pressure_resolution;
   this->pressure_max = pressure_max;
+  this->state = State::STATE0;
 
   // Produce bitmasks to mask out undefined bits of both sensors. The pressure sensor's resolution
   // depends on the purchased option (-6, -7, -8 for 16-, 17-, and 18-bit resolution respectively),
@@ -117,32 +119,37 @@ bool AllSensors_DLHR::readDataAsynchro(MeasurementType measurement_type){
    
    switch (this->state){
       case State::STATE0:
-        Serial.println("start conversion");
         startMeasurement(measurement_type);  //start conversion
-        Serial.println("going to State 1");
         this->state = State::STATE1;
         break;
 
       case State::STATE1:
+        bus->requestFrom(I2C_ADDRESS, (uint8_t) (READ_STATUS_LENGTH));// + READ_PRESSURE_LENGTH + READ_TEMPERATURE_LENGTH));
          // Read the 8-bit status data.
-        status = bus->read();
+          status = bus->read();
         if (isError(status)) {
           // An ALU or memory error occurred.
           bus->endTransmission();
-          goto error;
+              this->pressure = NAN;
+              this->temperature = NAN;
+              this->state = State::STATE0;
+              dataReady = true;
+              break;
         }
         if (isBusy(status)) {
           // The sensor is still busy; either retry or fail.
           bus->endTransmission();
         }
         else{
-          Serial.println("going to State 2");
+          bus->endTransmission();
           this->state = State::STATE2;
         }
         break;
 
 
       case State::STATE2:
+          bus->requestFrom(I2C_ADDRESS, (uint8_t) (READ_STATUS_LENGTH + READ_PRESSURE_LENGTH + READ_TEMPERATURE_LENGTH));
+          status = bus->read();
           // Read the 24-bit (high 16-18 bits defined) of raw pressure data.
           *((uint8_t *)(&raw_p)+2) = bus->read();
           *((uint8_t *)(&raw_p)+1) = bus->read();
@@ -155,21 +162,11 @@ bool AllSensors_DLHR::readDataAsynchro(MeasurementType measurement_type){
           
           bus->endTransmission();
 
-          pressure = convertPressure(transferPressure(raw_p & pressure_resolution_mask));
-          temperature = convertTemperature(transferTemperature(raw_t & temperature_resolution_mask));
-          dataReady = true;
-          Serial.println("going to State 0");
+          this->pressure = convertPressure(transferPressure(raw_p & pressure_resolution_mask));
+          this->temperature = convertTemperature(transferTemperature(raw_t & temperature_resolution_mask));
           this->state = State::STATE0;
+          dataReady = true;
         break;
    }
-
-   
-
-  error:
-    this->pressure = NAN;
-    this->temperature = NAN; 
-   
-
-
   return dataReady;
 }
