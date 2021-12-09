@@ -221,6 +221,8 @@ public:
 
  bool AllSensors_DLHR::readDataAsynchro(MeasurementType measurement_type = MeasurementType::SINGLE);
 
+};
+
 #include "AllSensors_DLHR_subclasses.h"
 
 #endif // ALLSENSORS_DLHR_H
