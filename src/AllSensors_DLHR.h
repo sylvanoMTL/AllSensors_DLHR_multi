@@ -219,8 +219,7 @@ public:
   // data was not available. 
   bool readData(bool wait = true);
 
-  bool readDataAsynchro(MeasurementType measurement_type = MeasurementType::SINGLE);
-};
+ bool AllSensors_DLHR::readDataAsynchro(MeasurementType measurement_type = MeasurementType::SINGLE);
 
 #include "AllSensors_DLHR_subclasses.h"
 

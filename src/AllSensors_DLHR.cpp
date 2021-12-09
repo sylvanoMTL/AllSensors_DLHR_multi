@@ -112,12 +112,12 @@ error:
 
 
 
-bool AllSensors_DLHR::readDataAsynchro(MeasurementType measurement_type = MeasurementType::SINGLE){
+bool AllSensors_DLHR::readDataAsynchro(MeasurementType measurement_type){
    bool dataReady = false;
    
-   switch (this->State){
+   switch (this->state){
       case State::STATE0:
-        Serial.println("start conversion")
+        Serial.println("start conversion");
         startMeasurement(measurement_type);  //start conversion
         Serial.println("going to State 1");
         this->state = State::STATE1;
