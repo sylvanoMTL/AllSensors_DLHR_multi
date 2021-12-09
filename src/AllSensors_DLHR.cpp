@@ -110,3 +110,66 @@ error:
   return true;
 }
 
+
+
+bool AllSensors_DLHR::readDataAsynchro(MeasurementType measurement_type = MeasurementType::SINGLE){
+   bool dataReady = false;
+   
+   switch (this->State){
+      case State::STATE0:
+        Serial.println("start conversion")
+        startMeasurement(measurement_type);  //start conversion
+        Serial.println("going to State 1");
+        this->state = State::STATE1;
+        break;
+
+      case State::STATE1:
+         // Read the 8-bit status data.
+        status = bus->read();
+        if (isError(status)) {
+          // An ALU or memory error occurred.
+          bus->endTransmission();
+          goto error;
+        }
+        if (isBusy(status)) {
+          // The sensor is still busy; either retry or fail.
+          bus->endTransmission();
+        }
+        else{
+          Serial.println("going to State 2");
+          this->state = State::STATE2;
+        }
+        break;
+
+
+      case State::STATE2:
+          // Read the 24-bit (high 16-18 bits defined) of raw pressure data.
+          *((uint8_t *)(&raw_p)+2) = bus->read();
+          *((uint8_t *)(&raw_p)+1) = bus->read();
+          *((uint8_t *)(&raw_p)+0) = bus->read();
+
+          // Read the 24-bit (high 16 bits defined) of raw temperature data.
+          *((uint8_t *)(&raw_t)+2) = bus->read();
+          *((uint8_t *)(&raw_t)+1) = bus->read();
+          *((uint8_t *)(&raw_t)+0) = bus->read();
+          
+          bus->endTransmission();
+
+          pressure = convertPressure(transferPressure(raw_p & pressure_resolution_mask));
+          temperature = convertTemperature(transferTemperature(raw_t & temperature_resolution_mask));
+          dataReady = true;
+          Serial.println("going to State 0");
+          this->state = State::STATE0;
+        break;
+   }
+
+   
+
+  error:
+    this->pressure = NAN;
+    this->temperature = NAN; 
+   
+
+
+  return dataReady;
+}

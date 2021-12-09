@@ -87,6 +87,12 @@ public:
     KELVIN     = 'K',
   };
 
+  enum State{
+    STATE0 = 0;
+    STATE1 = 1;
+    STATE2 = 2;
+  };
+
 private:
 
   // The length of the status information in the I2C response.
@@ -116,6 +122,7 @@ private:
   float pressure_zero_ref;
   PressureUnit pressure_unit;
   TemperatureUnit temperature_unit;
+  State state;
 
   // Convert a raw digital pressure read from the sensor to a floating point value in inH2O.
   float transferPressure(unsigned long raw_value) {
@@ -211,6 +218,8 @@ public:
   // no longer busy. If wait is false, if the sensor is busy return "true" immediately indicating that
   // data was not available. 
   bool readData(bool wait = true);
+
+  bool readDataAsynchro(MeasurementType measurement_type = MeasurementType::SINGLE);
 };
 
 #include "AllSensors_DLHR_subclasses.h"
