@@ -88,9 +88,9 @@ public:
   };
 
   enum State{
-    STATE0 = 0;
-    STATE1 = 1;
-    STATE2 = 2;
+    STATE0 = 0,
+    STATE1 = 1,
+    STATE2 = 2,
   };
 
 private:
