@@ -10,6 +10,8 @@ See the LICENSE file for more details.
 
 */
 
+//modified for multiple i2c sensors: Sylvain Boyer
+
 #include "AllSensors_DLHR.h"
 
 #include <math.h>

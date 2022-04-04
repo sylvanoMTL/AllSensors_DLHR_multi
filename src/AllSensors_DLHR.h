@@ -27,11 +27,13 @@ See the LICENSE file for more details.
 
 */
 
+//modified for multiple i2c sensors: Sylvain Boyer
+
 #ifndef ALLSENSORS_DLHR_H
 #define ALLSENSORS_DLHR_H
 
 #include <stdint.h>
-
+#include <Arduino.h>
 #include <Wire.h>
 
 class AllSensors_DLHR {
